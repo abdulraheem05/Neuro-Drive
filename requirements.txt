@@ -1,0 +1,10 @@
+tensorflow==2.21.0
+opencv-python
+Pillow
+numpy
+pandas
+matplotlib
+Flask
+python-socketio==4.6.1
+python-engineio==3.13.2
+eventlet==0.33.3

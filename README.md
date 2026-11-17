@@ -126,7 +126,7 @@ Extract the downloaded archive and launch the simulator.
 ### 2. Clone the Repository
 
 ```bash
-git clone https://github.com/abdulraheem05/NeuroDrive.git
+git clone https://github.com/abdulraheem05/Neuro-Drive.git
 cd NeuroDrive
 ```
 

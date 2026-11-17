@@ -25,7 +25,6 @@ IMG_WIDTH = 200
 CROP_TOP = 0.35
 CROP_BOTTOM = 0.10
 
-THROTTLE = 0.27
 PORT = 4567
 
 
@@ -35,7 +34,8 @@ PORT = 4567
 
 model = keras.models.load_model(MODEL_PATH)
 
-print("NeuroDrive model loaded.")
+print("NeuroDrive V2 model loaded.")
+print("Model outputs:", model.output_names)
 
 
 # ============================================================
@@ -67,7 +67,6 @@ def preprocess_image(image):
         interpolation=cv2.INTER_AREA
     )
 
-    # Simulator image is already RGB.
     return image.astype(np.uint8)
 
 
@@ -108,30 +107,38 @@ def telemetry(sid, data):
 
         image = np.asarray(image)
 
-        # Preprocess
+        # Preprocess image
         processed = preprocess_image(image)
 
         # Add batch dimension
         batch = np.expand_dims(processed, axis=0)
 
-        # CNN inference
+        # Model inference: steering + throttle
+        predictions = model.predict(batch, verbose=0)
+
         steering = float(
-            model.predict(batch, verbose=0)[0][0]
+            predictions["steering"].flatten()[0]
         )
 
+        throttle = float(
+            predictions["throttle"].flatten()[0]
+        )
+
+        # Safety clipping
         steering = float(
             np.clip(steering, -1.0, 1.0)
         )
 
-        # Fixed throttle for initial testing
-        throttle = THROTTLE
+        throttle = float(
+            np.clip(throttle, 0.0, 1.0)
+        )
 
-        # Send control
+        # Send predicted controls
         send_control(sid, steering, throttle)
 
         print(
             f"Steering: {steering:+.3f} | "
-            f"Throttle: {throttle:.2f}"
+            f"Throttle: {throttle:.3f}"
         )
 
     except Exception as e:
@@ -165,7 +172,7 @@ def disconnect(sid):
 
 if __name__ == "__main__":
 
-    print(f"Starting NeuroDrive server on port {PORT}...")
+    print(f"Starting NeuroDrive V2 server on port {PORT}...")
 
     eventlet.wsgi.server(
         eventlet.listen(("", PORT)),
